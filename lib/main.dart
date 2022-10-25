@@ -52,6 +52,9 @@ class _MyHomePageState extends State<MyHomePage> {
   ScreenshotController controller = ScreenshotController();
   Uint8List? bytes;
 
+  final ScrollController scrollController = ScrollController();
+  final ScrollController scrollControllerHorizontal = ScrollController();
+
   final Uri _url = Uri.parse('https://mobile.twitter.com/norbertomartnaf/');
 
   Future<void> _launchUrl() async {
@@ -138,178 +141,191 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           ]
       ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Column(
+      body: SingleChildScrollView(
+        controller: scrollController,
+        child: ConstrainedBox(
+          constraints: BoxConstraints.loose(const Size(1000,800)),
+          child: SingleChildScrollView(
+            controller: scrollControllerHorizontal,
+            scrollDirection: Axis.horizontal,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                const SizedBox(height: 100,),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  crossAxisAlignment: CrossAxisAlignment.center,
                   children: [
-                    const Text(
-                      'Introduzca la url que desea convertir en código QR:',
+                    const SizedBox(width: 100,),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Text(
+                          'Introduzca la url que desea convertir en código QR:',
+                        ),
+                        Form(
+                          key: _formKey,
+                          autovalidateMode: AutovalidateMode.always,
+                          onChanged: () {
+                            //Form.of(primaryFocus!.context!)!.save();
+                          },
+                          child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Padding(
+                                  padding: const EdgeInsets.all(5.0),
+                                  child: ConstrainedBox(
+                                      constraints: BoxConstraints.tight(const Size(400, 30)),
+                                      child: const Text("mínimo de 4 caracteres",textAlign: TextAlign.center,)
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(10.0),
+                                  child: ConstrainedBox(
+                                      constraints: BoxConstraints.tight(const Size(400, 50)),
+                                      child: TextFormField(
+                                        decoration: const InputDecoration(
+                                          icon: Icon(Icons.keyboard),
+                                        ),
+                                        onSaved: (String? value) {
+                                          if(value!=null){
+                                            //Navigator.pop(context);
+                                            _formKey.currentState?.reset();
+                                            String valueFinal=removeDiacritics(value.toLowerCase());
+                                            print(valueFinal);
+                                            c.dataForm=valueFinal;
+                                          }
+                                        },
+                                        validator: (String? value) {
+                                          bool isValid=false;
+                                          bool hasTittle=false;
+                                          if(isLength(value!,1,200)&&!hasTittle){
+                                            isValid=true;
+                                          }
+
+                                          if (!isValid) {
+                                            return 'No es válido';
+                                          }
+                                          return null;
+                                        },
+                                      )
+                                  ),
+                                ),
+                                Padding(
+                                  padding: const EdgeInsets.all(5),
+                                  child: ElevatedButton(
+                                    child: const Text('Generar QR'),
+                                    onPressed: (){
+                                      if(_formKey.currentState!.validate()){
+                                        _formKey.currentState?.save();
+                                        setState(() {
+
+                                        });
+                                      }
+                                    },
+                                  ),
+                                ),
+                              ]
+                          ),
+                        ),
+                      ],
                     ),
-                    Form(
-                      key: _formKey,
-                      autovalidateMode: AutovalidateMode.always,
-                      onChanged: () {
-                        //Form.of(primaryFocus!.context!)!.save();
-                      },
+                    Padding(
+                      padding: const EdgeInsets.all(20),
                       child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Padding(
-                              padding: const EdgeInsets.all(5.0),
-                              child: ConstrainedBox(
-                                  constraints: BoxConstraints.tight(const Size(400, 30)),
-                                  child: const Text("mínimo de 4 caracteres",textAlign: TextAlign.center,)
-                              ),
-                            ),
-                            Padding(
-                              padding: const EdgeInsets.all(10.0),
-                              child: ConstrainedBox(
-                                  constraints: BoxConstraints.tight(const Size(400, 50)),
-                                  child: TextFormField(
-                                    decoration: const InputDecoration(
-                                      icon: Icon(Icons.keyboard),
-                                    ),
-                                    onSaved: (String? value) {
-                                      if(value!=null){
-                                        //Navigator.pop(context);
-                                        _formKey.currentState?.reset();
-                                        String valueFinal=removeDiacritics(value.toLowerCase());
-                                        print(valueFinal);
-                                        c.dataForm=valueFinal;
-                                      }
-                                    },
-                                    validator: (String? value) {
-                                      bool isValid=false;
-                                      bool hasTittle=false;
-                                      if(isLength(value!,1,200)&&!hasTittle){
-                                        isValid=true;
-                                      }
-
-                                      if (!isValid) {
-                                        return 'No es válido';
-                                      }
-                                      return null;
-                                    },
-                                  )
-                              ),
-                            ),
-                            Padding(
+                        children: [
+                          const Padding(
+                            padding: EdgeInsets.all(5),
+                            child: Text('Agregar Logo'),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.all(5),
+                            child: Obx(()=>Switch(
+                              value: c.light.value,
+                              activeColor: Colors.green,
+                              onChanged: (bool value) {
+                                c.light.value = value;
+                              },
+                            )),
+                          ),
+                          Obx(() {
+                            return c.light.value ? Padding(
                               padding: const EdgeInsets.all(5),
-                              child: ElevatedButton(
-                                child: const Text('Generar QR'),
-                                onPressed: (){
-                                  if(_formKey.currentState!.validate()){
-                                    _formKey.currentState?.save();
-                                    setState(() {
+                              child: MaterialButton(
+                                  onPressed: () async{
+                                    bool _hasValidMime = false;
+                                    String? _path;
+                                    FilePickerResult? result = await FilePickerWeb.platform.pickFiles(
+                                      withReadStream: true,
+                                      withData: false,
+                                      type:FileType.custom,
+                                      allowedExtensions: ['jpg','jpeg','png'],
+                                    );
 
-                                    });
-                                  }
-                                },
+                                    _path=result?.files.first.extension;
+                                    if(_path=='jpg'||_path=='jpeg'||_path=='png'){
+                                      _hasValidMime=true;
+                                    }
+
+                                    if (result != null&&_hasValidMime) {
+                                      await getData(result);
+                                    }else if(result == null){
+
+                                    }
+                                    else if(!_hasValidMime){
+                                      showDialog(context: context,
+                                        builder: (BuildContext context) {
+                                          return MyAlertDialog(
+                                            tittle: 'unsupported_format'.tr,
+                                            description: 'unsupported_format_description'.tr,
+                                          );
+                                        },
+                                      );
+                                    }
+                                  },
+                                  child: c.myIcon.value
                               ),
-                            ),
-                          ]
+                            ) : const SizedBox(height: 60,);
+                          })
+                        ],
                       ),
                     ),
+                    Obx(() {
+                      return c.light.value ? Padding(
+                          padding: const EdgeInsets.all(10),
+                          child: MyWidget()
+                      ) : const SizedBox(height: 100,width: 100,);
+                    })
                   ],
                 ),
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Column(
-                    children: [
-                      const Padding(
-                        padding: EdgeInsets.all(5),
-                        child: Text('Agregar Logo'),
-                      ),
-                      Padding(
-                        padding: const EdgeInsets.all(5),
-                        child: Obx(()=>Switch(
-                          value: c.light.value,
-                          activeColor: Colors.green,
-                          onChanged: (bool value) {
-                            c.light.value = value;
-                          },
-                        )),
-                      ),
-                      Obx(() {
-                        return c.light.value ? Padding(
-                          padding: const EdgeInsets.all(5),
-                          child: MaterialButton(
-                              onPressed: () async{
-                                bool _hasValidMime = false;
-                                String? _path;
-                                FilePickerResult? result = await FilePickerWeb.platform.pickFiles(
-                                  withReadStream: true,
-                                  withData: false,
-                                  type:FileType.custom,
-                                  allowedExtensions: ['jpg','jpeg','png'],
-                                );
 
-                                _path=result?.files.first.extension;
-                                if(_path=='jpg'||_path=='jpeg'||_path=='png'){
-                                  _hasValidMime=true;
-                                }
-
-                                if (result != null&&_hasValidMime) {
-                                  await getData(result);
-                                }else if(result == null){
-
-                                }
-                                else if(!_hasValidMime){
-                                  showDialog(context: context,
-                                    builder: (BuildContext context) {
-                                      return MyAlertDialog(
-                                        tittle: 'unsupported_format'.tr,
-                                        description: 'unsupported_format_description'.tr,
-                                      );
-                                    },
-                                  );
-                                }
-                              },
-                              child: c.myIcon.value
-                          ),
-                        ) : const SizedBox(height: 60,);
-                      })
-                    ],
-                  ),
-                ),
-                Obx(() {
-                  return c.light.value ? Padding(
-                      padding: const EdgeInsets.all(10),
-                      child: MyWidget()
-                  ) : const SizedBox(height: 100,width: 100,);
-                })
-              ],
-            ),
-
-            c.dataForm=="" ? Container() :
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Padding(
-                  padding: const EdgeInsets.all(20),
-                  child: Screenshot(
-                    controller: controller,
-                    child: MyCapturedWidget(),
-                  )
-                ),
-                //if (bytes != null) buildImage(bytes!),
-                ElevatedButton(
-                  child: const Text('Guardar código QR'),
-                  onPressed: () {
-                    controller.capture(delay: const Duration(milliseconds: 10)).then((capturedImage) {
-                      //ShowCapturedWidget(context, capturedImage!);
-                      exportImage(capturedImage);
-                    });
-                  },
+                c.dataForm=="" ? Container() :
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Padding(
+                        padding: const EdgeInsets.all(20),
+                        child: Screenshot(
+                          controller: controller,
+                          child: MyCapturedWidget(),
+                        )
+                    ),
+                    //if (bytes != null) buildImage(bytes!),
+                    ElevatedButton(
+                      child: const Text('Guardar código QR'),
+                      onPressed: () {
+                        controller.capture(delay: const Duration(milliseconds: 10)).then((capturedImage) {
+                          //ShowCapturedWidget(context, capturedImage!);
+                          exportImage(capturedImage);
+                        });
+                      },
+                    )
+                  ],
                 )
               ],
-            )
-          ],
+            ),
+          ),
         ),
       ),
     );
