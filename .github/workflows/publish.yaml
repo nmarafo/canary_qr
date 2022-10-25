@@ -16,3 +16,4 @@ jobs:
           targetBranch: gh-pages
           baseHref: /canary_qr/
           webRenderer: canvaskit
+          customArgs: --dart-define="BROWSER_IMAGE_DECODING_ENABLED=false"
